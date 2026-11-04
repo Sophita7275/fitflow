@@ -1,9 +1,20 @@
 """Panel visual del sistema multiagente. Ejecutar con:  streamlit run dashboard.py"""
+import matplotlib.pyplot as plt
 import streamlit as st
 
 from agentes.orquestador import AgenteOrquestador
 
 DIAS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+
+
+def grafico_barras(serie):
+    """Barras horizontales con matplotlib (st.bar_chart usa Altair, que falla en Python 3.14)."""
+    fig, ax = plt.subplots(figsize=(6, 0.45 * len(serie) + 0.8))
+    serie.sort_values().plot.barh(ax=ax, color="#6b4fbb")
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.set_ylabel("")
+    st.pyplot(fig)
+    plt.close(fig)
 
 st.set_page_config(page_title="FitFlow - Big Data con agentes", layout="wide")
 st.title("FitFlow: sistema multiagente de Big Data")
@@ -41,7 +52,7 @@ with tabs[0]:
     c.metric("A cuarentena", s["invalidos"])
     d.metric("Duplicados descartados", s["duplicados"])
     st.subheader("Eventos por tipo")
-    st.bar_chart(r["eventos"].tipo.value_counts())
+    grafico_barras(r["eventos"].tipo.value_counts())
     st.subheader(f"Alertas de aforo emitidas en tiempo real ({len(r['alertas_aforo'])})")
     st.dataframe(r["alertas_aforo"], use_container_width=True)
 
@@ -61,10 +72,10 @@ with tabs[2]:
         c = r["churn"]
         st.subheader("Modelo de abandono (Random Forest)")
         st.write(f"AUC **{c['auc']:.2f}** · precisión **{c['precision']:.2f}** · recall **{c['recall']:.2f}**")
-        st.bar_chart(c["importancias"])
+        grafico_barras(c["importancias"])
     with col2:
         st.subheader("Segmentos (K-Means)")
-        st.bar_chart(r["perfiles"].segmento.value_counts())
+        grafico_barras(r["perfiles"].segmento.value_counts())
 
 with tabs[3]:
     n = r["notificaciones"]
